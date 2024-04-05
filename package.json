@@ -1,0 +1,49 @@
+{
+	"name": "@nesvet/conveyer",
+	"version": "1.0.2101",
+	"type": "module",
+	"module": "./lib/index.js",
+	"main": "./lib/index.js",
+	"exports": {
+		"./stages": "./lib/stages/index.js",
+		"./env": "./lib/env.js",
+		"./Packages": "./lib/utils/Packages.js"
+	},
+	"imports": {
+		"#utils/*": "./lib/utils/*"
+	},
+	"packageManager": "yarn@1.22.19",
+	"scripts": {
+		"ui": "yarn upgrade-interactive"
+	},
+	"bin": "./lib/index.js",
+	"author": "Eugene Nesvetaev",
+	"dependencies": {
+		"@nesvet/debounce": "link:../debounce",
+		"@nesvet/esbuild-plugin-jscc": "link:../esbuild-plugin-jscc",
+		"@nesvet/n": "^1",
+		"@nesvet/process-request": "link:../process-request",
+		"anymatch": "^3",
+		"chalk": "^5",
+		"chokidar": "^3",
+		"compare-versions": "^6",
+		"esbuild": "^0.20",
+		"esbuild-node-externals": "^1.13.0",
+		"fs-extra": "^11",
+		"open": "^8",
+		"ora": "^6",
+		"pkg-dir": "^7",
+		"resolve-package-path": "^4",
+		"zip-a-folder": "^2"
+	},
+	"devDependencies": {
+		"@nesvet/eslint-config": "^1",
+		"eslint": "^8",
+		"eslint-import-resolver-typescript": "^3",
+		"eslint-plugin-import": "^2",
+		"eslint-plugin-indent-empty-lines": "^1",
+		"eslint-plugin-simple-import-sort": "^10"
+	},
+	"license": "UNLICENCED",
+	"private": true
+}
