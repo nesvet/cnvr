@@ -1,6 +1,7 @@
 {
 	"name": "@nesvet/conveyer",
 	"version": "1.0.2101",
+	"description": "Project build/dev pipeline",
 	"type": "module",
 	"module": "./lib/index.js",
 	"main": "./lib/index.js",
@@ -9,17 +10,32 @@
 		"./env": "./lib/env.js",
 		"./Packages": "./lib/utils/Packages.js"
 	},
+	"bin": "./lib/index.js",
 	"imports": {
 		"#utils/*": "./lib/utils/*"
 	},
-	"packageManager": "yarn@1.22.19",
+	"packageManager": "yarn@1.22.22",
 	"scripts": {
-		"ui": "yarn upgrade-interactive"
+		"test": "echo \"Error: no test specified\" && exit 1"
 	},
-	"bin": "./lib/index.js",
-	"author": "Eugene Nesvetaev",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/nesvet/conveyer.git"
+	},
+	"keywords": [
+		"build",
+		"dev",
+		"watch",
+		"pipeline",
+		"esbuild",
+		"bundle",
+		"copy",
+		"mongodb",
+		"nginx"
+	],
+	"author": "Eugene Nesvetaev <dev@nesvet.dev> (https://nesvet.dev/)",
+	"license": "MIT",
 	"dependencies": {
-		"@nesvet/debounce": "link:../debounce",
 		"@nesvet/esbuild-plugin-jscc": "link:../esbuild-plugin-jscc",
 		"@nesvet/n": "^1",
 		"@nesvet/process-request": "link:../process-request",
@@ -37,13 +53,6 @@
 		"zip-a-folder": "^2"
 	},
 	"devDependencies": {
-		"@nesvet/eslint-config": "^1",
-		"eslint": "^8",
-		"eslint-import-resolver-typescript": "^3",
-		"eslint-plugin-import": "^2",
-		"eslint-plugin-indent-empty-lines": "^1",
-		"eslint-plugin-simple-import-sort": "^10"
-	},
-	"license": "UNLICENCED",
-	"private": true
+		"@nesvet/eslint-config": "^1"
+	}
 }
