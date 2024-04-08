@@ -36,9 +36,9 @@
 	"author": "Eugene Nesvetaev <dev@nesvet.dev> (https://nesvet.dev/)",
 	"license": "MIT",
 	"dependencies": {
-		"@nesvet/esbuild-plugin-jscc": "link:../esbuild-plugin-jscc",
+		"esbuild-plugin-jscc": "^1",
 		"@nesvet/n": "^1",
-		"@nesvet/process-request": "link:../process-request",
+		"process-request": "^1",
 		"anymatch": "^3",
 		"chalk": "^5",
 		"chokidar": "^3",

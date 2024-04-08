@@ -195,10 +195,6 @@
   resolved "https://registry.yarnpkg.com/@jsbits/get-package-version/-/get-package-version-1.0.3.tgz#a47dfd077420beee435580c3bc197931fe3c694c"
   integrity sha512-IJy1jRL01x7p6UEpgKa1lVLstMUx8EiIR8pPoS5sBfsHEoeLkzYiNpAfxPx8zLDUJyS1yBbChJjcWdPqyH285w==
 
-"@nesvet/esbuild-plugin-jscc@link:../esbuild-plugin-jscc":
-  version "0.0.0"
-  uid ""
-
 "@nesvet/eslint-config@^1":
   version "1.0.290"
   resolved "https://registry.yarnpkg.com/@nesvet/eslint-config/-/eslint-config-1.0.290.tgz#bd7d5fc841935c2edd1af69781dfe8ade7a99a51"
@@ -219,10 +215,6 @@
   version "1.0.31"
   resolved "https://registry.yarnpkg.com/@nesvet/n/-/n-1.0.31.tgz#5613334bfe70af40684b57e8704a783760cf3411"
   integrity sha512-/MjUdavrRafPH6aYgTB743crIZwKS6LsqiHpAjMKAUJmLVEW/9wfi9zZJVqZn0l96FwnaC5gW17lN4t0YDvlAA==
-
-"@nesvet/process-request@link:../process-request":
-  version "0.0.0"
-  uid ""
 
 "@nodelib/fs.scandir@2.1.5":
   version "2.1.5"
@@ -984,6 +976,14 @@ esbuild-node-externals@^1.13.0:
   dependencies:
     find-up "^5.0.0"
     tslib "^2.4.1"
+
+esbuild-plugin-jscc@^1:
+  version "1.0.14"
+  resolved "https://registry.yarnpkg.com/esbuild-plugin-jscc/-/esbuild-plugin-jscc-1.0.14.tgz#570bb8d50ea4d626050e1d5c172175b351f7864c"
+  integrity sha512-MStwCwouazHE7KBUl8/qD2nIgb/wTPjLVBix+zbjtXz8ygiCl7uVX7jtfT4dYtAfZ7rXL6Q5tMpVVwXGp4981Q==
+  dependencies:
+    anymatch "^3"
+    jscc "^1"
 
 esbuild@^0.20:
   version "0.20.2"
@@ -2239,6 +2239,13 @@ process-nextick-args@~2.0.0:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/process-nextick-args/-/process-nextick-args-2.0.1.tgz#7820d9b16120cc55ca9ae7792680ae7dba6d7fe2"
   integrity sha512-3ouUOpQhtgrbOa17J7+uxOTpITYWaGP7/AhoR3+A+/1e9skrzelGi/dXzEYyvbxubEF6Wn2ypscTKiKJFFn1ag==
+
+process-request@^1:
+  version "1.0.12"
+  resolved "https://registry.yarnpkg.com/process-request/-/process-request-1.0.12.tgz#074be523b6293496ceb74cd803a405ee5b24a55b"
+  integrity sha512-Nw2kU/XRNa/c6UIexkZRc5E4qdopcstwETCdXtOhJfxJn5HWDqwywReYpwpAADwifDgNKy/1OXZfjIwJCi1xHw==
+  dependencies:
+    "@nesvet/n" "^1"
 
 prop-types@^15.8.1:
   version "15.8.1"
