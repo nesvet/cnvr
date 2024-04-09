@@ -212,9 +212,9 @@
     typescript "^5"
 
 "@nesvet/n@^1":
-  version "1.0.31"
-  resolved "https://registry.yarnpkg.com/@nesvet/n/-/n-1.0.31.tgz#5613334bfe70af40684b57e8704a783760cf3411"
-  integrity sha512-/MjUdavrRafPH6aYgTB743crIZwKS6LsqiHpAjMKAUJmLVEW/9wfi9zZJVqZn0l96FwnaC5gW17lN4t0YDvlAA==
+  version "1.0.32"
+  resolved "https://registry.yarnpkg.com/@nesvet/n/-/n-1.0.32.tgz#57d1f4478fc50c438d9f0ea7144020d55925df86"
+  integrity sha512-Am7zs7xGoo+pa6Net5+yG2jZJq/b1BalcHiwwWiA+ZqQ+r/88ERJM3sy7Tw7wiTyH0LO77HOiEsAjQHAcnKEHA==
 
 "@nodelib/fs.scandir@2.1.5":
   version "2.1.5"
