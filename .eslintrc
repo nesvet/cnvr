@@ -3,5 +3,8 @@
 	"env": {
 		"node": true
 	},
+	"globals": {
+		"Bun": "readonly"
+	},
 	"root": true
 }
