@@ -52,6 +52,6 @@
     "zip-a-folder": "^2.0.2"
   },
   "devDependencies": {
-    "@nesvet/eslint-config": "^1.1.0"
+    "@nesvet/eslint-config": "^2.0.13"
   }
 }
