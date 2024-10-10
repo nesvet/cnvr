@@ -1,6 +1,6 @@
 {
   "name": "@nesvet/conveyer",
-  "version": "2.2.4",
+  "version": "2.2.5",
   "description": "Project build/dev pipeline",
   "type": "module",
   "module": "./lib/index.js",
