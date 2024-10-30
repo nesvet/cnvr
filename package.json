@@ -14,7 +14,7 @@
   "imports": {
     "#utils/*": "./lib/utils/*"
   },
-  "packageManager": "bun@1.1.30",
+  "packageManager": "bun@1.1.33",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -52,6 +52,6 @@
     "zip-a-folder": "^2.0.2"
   },
   "devDependencies": {
-    "@nesvet/eslint-config": "^2.0.27"
+    "@nesvet/eslint-config": "^2.0.34"
   }
 }
