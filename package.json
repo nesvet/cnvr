@@ -14,7 +14,7 @@
   "imports": {
     "#utils/*": "./lib/utils/*"
   },
-  "packageManager": "bun@1.1.33",
+  "packageManager": "bun@1.1.34",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
