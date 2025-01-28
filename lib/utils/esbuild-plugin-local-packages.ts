@@ -3,12 +3,13 @@ import { dirname, join } from "node:path";
 import anymatch from "anymatch";
 import globrex from "globrex";
 import resolvePackagePath from "resolve-package-path";
+import type { PluginBuild } from "esbuild";
 
 
-export function local(packages) {
+export function localPackages(packages: string[]) {
 	return {
-		name: "local",
-		setup: build => {
+		name: "localPackages",
+		setup: (build: PluginBuild) => {
 			build.onResolve({
 				filter: new RegExp(`^(${packages.map(glob => globrex(glob).regex.source.replace(/^\^(.*)\$$/, "$1")).join("|")})`)
 			}, async args => {
@@ -16,7 +17,7 @@ export function local(packages) {
 				try {
 					let path;
 					
-					const [ , packageName, subPath ] = args.path.match(/^(@[\da-z-]+\/[\da-z-]+|[\da-z-]+)(\/.*)?$/);
+					const [ , packageName, subPath ] = args.path.match(/^(@[\da-z-]+\/[\da-z-]+|[\da-z-]+)(\/.*)?$/)!;
 					
 					const packageJSONPath = resolvePackagePath(packageName, args.resolveDir);
 					
@@ -26,7 +27,7 @@ export function local(packages) {
 						
 						if (subPath) {
 							if (exports)
-								for (const [ exportPath, realPath ] of Object.entries(exports))
+								for (const [ exportPath, realPath ] of Object.entries(exports) as [ string, string ][])
 									if (anymatch(exportPath, subPath))
 										path = join(packagePath, realPath);
 						} else
