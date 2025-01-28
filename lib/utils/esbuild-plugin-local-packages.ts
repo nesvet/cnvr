@@ -8,7 +8,7 @@ import type { PluginBuild } from "esbuild";
 
 export function localPackages(packages: string[]) {
 	return {
-		name: "localPackages",
+		name: "esbuild-plugin-local-packages",
 		setup: (build: PluginBuild) => {
 			build.onResolve({
 				filter: new RegExp(`^(${packages.map(glob => globrex(glob).regex.source.replace(/^\^(.*)\$$/, "$1")).join("|")})`)
