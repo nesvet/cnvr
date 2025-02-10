@@ -11,13 +11,13 @@ export function localPackages(packages: string[]) {
 		name: "esbuild-plugin-local-packages",
 		setup: (build: PluginBuild) => {
 			build.onResolve({
-				filter: new RegExp(`^(${packages.map(glob => globrex(glob).regex.source.replace(/^\^(.*)\$$/, "$1")).join("|")})`)
+				filter: new RegExp(`^(?:${packages.map(glob => globrex(glob).regex.source.replace(/^\^(.*)\$$/, "$1")).join("|")})(?:/.+)?$`)
 			}, async args => {
 				
 				try {
 					let path;
 					
-					const [ , packageName, subPath ] = args.path.match(/^(@[\da-z-]+\/[\da-z-]+|[\da-z-]+)(\/.*)?$/)!;
+					const [ , packageName, subPath ] = args.path.match(/^(@[\da-z-]+\/[\da-z-]+|[\da-z-]+)(?:\/(.+))?$/)!;
 					
 					const packageJSONPath = resolvePackagePath(packageName, args.resolveDir);
 					
