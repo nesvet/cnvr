@@ -3,7 +3,7 @@ import path from "node:path";
 import { Packages } from "#utils";
 
 
-const declarationRegexp = /^[\dA-Z_]+=(?:(["'`])[\S\s]*?(?<!\\)\1|\S+)/gm;
+const declarationRegexp = /^[\dA-Z_]+\s*=\s*(?:(["'`])[\S\s]*?(?<!\\)\1|\S+)/gm;
 const quotesRegexp = /^(["'`])[\S\s]*\1$/;
 const nestedVariablesRegexp = /(?<!\\|\$)\$(?:{([\dA-Z_]+)(?::(-|=)([^}]*))?}|([\dA-Z_]+))/g;
 
