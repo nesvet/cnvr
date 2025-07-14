@@ -3,20 +3,19 @@
 	"version": "2.5.2",
 	"description": "Project build/dev pipeline",
 	"type": "module",
-	"module": "./lib/index.js",
-	"main": "./lib/index.js",
-	"exports": {
-		".": "./lib/index.js",
-		"./env": "./lib/env.js",
-		"./Packages": "./lib/utils/Packages.js"
+	"module": "./dist/index.js",
+	"main": "./dist/index.js",
+	"bin": {
+		"@nesvet/conveyer": "./cli/js.js",
+		"@nesvet/conveyer-ts": "./cli/ts.ts"
 	},
-	"bin": "./lib/cli.js",
 	"imports": {
-		"#utils": "./lib/utils/index.js"
+		"#utils": "./src/utils/index.js"
 	},
-	"packageManager": "bun@1.2.11",
+	"packageManager": "bun@1.2.18",
 	"scripts": {
-		"test": "echo \"Error: no test specified\" && exit 1"
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"b": "bun .conveyer.js && tsc -p ."
 	},
 	"repository": {
 		"type": "git",
@@ -41,17 +40,18 @@
 		"chalk": "^5.4.1",
 		"chokidar": "^4.0.3",
 		"compare-versions": "^6.1.1",
-		"esbuild": "^0.25.3",
+		"esbuild": "^0.25.6",
 		"esbuild-plugin-jscc": "^1.0.14",
 		"open": "^10.1.2",
 		"ora": "^8.2.0",
 		"process-request": "^1.1.6",
 		"resolve-package-path": "^4.0.3",
+		"tsx": "^4.20.3",
 		"zip-a-folder": "^3.1.9"
 	},
 	"devDependencies": {
-		"@nesvet/eslint-config": "^2.1.1",
-		"@types/node": "^22.15.3",
+		"@nesvet/eslint-config": "^2.1.2",
+		"@types/node": "^24.0.13",
 		"typescript": "^5.8.3"
 	}
 }
