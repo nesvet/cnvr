@@ -2,7 +2,9 @@
 .gitignore
 .DS_Store
 node_modules/
+bun.lock
 .github/
 src/
+.conveyer.js
 eslint.config.js
 tsconfig.json
