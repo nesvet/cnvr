@@ -1,0 +1,8 @@
+{
+	"extends": "../tsconfig",
+	"compilerOptions": {
+		"paths": {
+			"$utils": [ "./utils/index.ts" ]
+		}
+	}
+}

@@ -1,8 +1,8 @@
 .git
 .gitignore
 .DS_Store
-*.log
 node_modules/
 .github/
+src/
 eslint.config.js
 tsconfig.json

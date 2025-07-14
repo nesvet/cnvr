@@ -5,17 +5,16 @@ import { fileURLToPath } from "node:url";
 import chalk from "chalk";
 import { watch } from "chokidar";
 import { RequestListener, RequestSender } from "process-request";
-import "../utils/BigInt.js";
 import {
 	env,
 	log,
 	Packages,
 	setNodePath
-} from "#utils";
+} from "$utils";
 
 
 if (process.env.IS_ENTRYPOINT) {
-	process.env.WATCH = true;
+	process.env.WATCH = "true";
 	if (!process.env.IS_ENTRYPOINT_TARGET) {
 		process.env.npm_lifecycle_event = "build";
 		const devIndex = process.argv.indexOf("--dev");
@@ -39,13 +38,18 @@ if (process.env.IS_ENTRYPOINT) {
 env();
 
 if (process.env.npm_lifecycle_event === "dev" || process.argv.includes("--dev")) {
-	process.env.DEV = true;
-	process.env.WATCH = true;
+	process.env.DEV = "true";
+	process.env.WATCH = "true";
 }
+
 if (process.env.npm_lifecycle_event === "build" || process.argv.includes("--build"))
-	process.env.BUILD = true;
-if (process.argv.includes("--bundle"))
-	process.env.BUNDLE = true;
+	process.env.BUILD = "true";
+
+const bundleArg = process.argv.find(arg => arg.startsWith("--bundle"));
+
+if (bundleArg)
+	process.env.BUNDLE = bundleArg.includes("=") ? bundleArg.split("=")[1] : "true";
+
 
 const { NODE_ENV, WATCH, IS_ENTRYPOINT } = process.env;
 

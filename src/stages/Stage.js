@@ -1,5 +1,5 @@
 import { mkdir, rm, stat } from "node:fs/promises";
-import path from "node:path";
+import { isAbsolute, resolve } from "node:path";
 import { watch } from "chokidar";
 
 
@@ -19,7 +19,7 @@ export class Stage {
 				paths = watchOptions;
 			else if (typeof watchOptions == "object")
 				({ paths, events, ...options } = watchOptions);
-			this.watchPaths = paths?.filter(Boolean).map(watchPath => path.isAbsolute(watchPath) ? watchPath : path.resolve(cwd, watchPath));
+			this.watchPaths = paths?.filter(Boolean).map(watchPath => isAbsolute(watchPath) ? watchPath : resolve(cwd, watchPath));
 			this.watchOptions = options;
 			this.watchEvents = events && (Array.isArray(events) ? events : [ events ]);
 		}

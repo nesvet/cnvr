@@ -1,13 +1,13 @@
 import childProcess from "node:child_process";
 
 
-export function isRunning(query) {
+export function isRunning(query: string) {
 	
 	const cmd = {
-		win32: "tasklist",
 		darwin: "ps -ax",
-		linux: "ps -A"
-	}[process.platform];
+		linux: "ps -A",
+		win32: "tasklist"
+	}[process.platform as "darwin" | "linux" | "win32"];
 	
 	if (!cmd)
 		return false;

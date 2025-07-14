@@ -1,7 +1,7 @@
 import childProcess from "node:child_process";
 import path from "node:path";
 import { noop } from "@nesvet/n";
-import { isRunning } from "#utils";
+import { isRunning } from "$utils";
 import { Stage } from "./Stage.js";
 
 

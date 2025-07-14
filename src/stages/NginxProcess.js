@@ -1,5 +1,5 @@
 import childProcess from "node:child_process";
-import { isRunning } from "#utils";
+import { isRunning } from "$utils";
 import { ChildProcess } from "./ChildProcess.js";
 
 

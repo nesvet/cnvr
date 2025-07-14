@@ -7,7 +7,7 @@ import {
 import { join } from "node:path";
 
 
-export async function copyRecursive(src, dest) {
+export async function copyRecursive(src: string, dest: string) {
 	if ((await stat(src)).isDirectory()) {
 		await mkdir(dest, { recursive: true });
 		await Promise.all((await readdir(src)).map(entry => copyRecursive(join(src, entry), join(dest, entry))));

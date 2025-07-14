@@ -3,7 +3,7 @@ import { isAbsolute, resolve } from "node:path";
 import { watch } from "chokidar";
 import { sleep } from "@nesvet/n";
 import "./env.js";
-import { log, setNodePath } from "#utils";
+import { log, setNodePath } from "$utils";
 import { Entrypoint } from "./Entrypoint.js";
 
 
@@ -45,6 +45,8 @@ export class Entrypoints extends Map {
 		for (const conveyerFileName of conveyerFileNames)
 			if (!entrypointFileNames.includes(conveyerFileName))
 				new Entrypoint(conveyerFileName, this, true);
+		
+		process.on("SIGINT", () => process.exit(0));
 		
 		if (immediate)
 			this.run();

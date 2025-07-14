@@ -1,5 +1,5 @@
-import path from "node:path";
-import { require } from "#utils";
+import { resolve } from "node:path";
+import { Packages } from "$utils";
 import { ChildProcess } from "./ChildProcess.js";
 
 
@@ -39,7 +39,7 @@ export class NodeProcess extends ChildProcess {
 	
 	do(isInitial) {
 		if (isInitial)
-			this.watchPaths.unshift(require.resolve(path.resolve(this.cwd ?? "", this.entry)));
+			this.watchPaths.unshift(Packages.getClosestPackageDir(resolve(this.cwd ?? "", this.entry)));
 		
 		return super.do();
 	}

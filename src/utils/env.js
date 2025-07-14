@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { require } from "#utils";
+import { Packages } from "$utils";
 
 
 const declarationRegexp = /^[\dA-Z_]+=(?:(["'`])[\S\s]*?(?<!\\)\1|\S+)/gm;
@@ -86,7 +86,7 @@ export function loadEnvFile(fileName, dirName = "") {
 }
 
 
-export function env(dirName = path.dirname(require.resolve(processArgv[1])), envName) {
+export function env(dirName = Packages.getClosestPackageDir(processArgv[1]), envName) {
 	loadEnvFile(path.join(dirName, ".env"));
 	
 	let isNodeEnvFileLoaded = false;
