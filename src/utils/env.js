@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { Packages } from "$utils";
+import { Packages } from "#utils";
 
 
 const declarationRegexp = /^[\dA-Z_]+=(?:(["'`])[\S\s]*?(?<!\\)\1|\S+)/gm;

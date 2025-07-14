@@ -1,5 +1,5 @@
 import { resolve } from "node:path";
-import { Packages } from "$utils";
+import { Packages } from "#utils";
 import { ChildProcess } from "./ChildProcess.js";
 
 

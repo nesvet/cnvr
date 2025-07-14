@@ -3,7 +3,7 @@ import { isAbsolute, resolve } from "node:path";
 import { watch } from "chokidar";
 import { sleep } from "@nesvet/n";
 import "./env.js";
-import { log, setNodePath } from "$utils";
+import { log, setNodePath } from "#utils";
 import { Entrypoint } from "./Entrypoint.js";
 
 

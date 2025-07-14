@@ -2,7 +2,7 @@ import path from "node:path";
 import * as esbuild from "esbuild";
 import { jscc } from "esbuild-plugin-jscc";
 import { unique } from "@nesvet/n";
-import { Packages } from "$utils";
+import { Packages } from "#utils";
 import { Stage } from "./Stage.js";
 
 

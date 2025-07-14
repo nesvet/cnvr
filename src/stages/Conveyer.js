@@ -10,7 +10,7 @@ import {
 	log,
 	Packages,
 	setNodePath
-} from "$utils";
+} from "#utils";
 
 
 if (process.env.IS_ENTRYPOINT) {

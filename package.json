@@ -10,7 +10,7 @@
 		"@nesvet/conveyer-ts": "./cli/ts.ts"
 	},
 	"imports": {
-		"#utils": "./src/utils/index.js"
+		"#utils": "./src/utils/index.ts"
 	},
 	"packageManager": "bun@1.2.18",
 	"scripts": {

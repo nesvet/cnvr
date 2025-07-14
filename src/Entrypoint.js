@@ -6,7 +6,7 @@ import chalk from "chalk";
 import { watch } from "chokidar";
 import { RequestListener, RequestSender } from "process-request";
 import { debounce } from "@nesvet/n";
-import { log, Packages } from "$utils";
+import { log, Packages } from "#utils";
 import { entrypointFileNames, validExtensions } from "./Entrypoints.js";
 
 
