@@ -113,7 +113,7 @@ export class ESBuild extends Stage {
 		
 	}
 	
-	async ensureWatchPaths(watchPaths) {
+	async #ensureWatchPaths(watchPaths) {
 		if (this.watchPaths.join(",") !== watchPaths.join(",")) {
 			this.watchPaths = watchPaths;
 			if (this.watcher)
@@ -131,7 +131,7 @@ export class ESBuild extends Stage {
 		
 		let isPathsChanged;
 		if (WATCH)
-			isPathsChanged = await this.ensureWatchPaths(Packages.metaFileNames(metafile));
+			isPathsChanged = await this.#ensureWatchPaths(Packages.metaFileNames(metafile));
 		
 		if (isInitial || isPathsChanged)
 			this.context.dependencies = this.context.packages.metaPick(metafile);
