@@ -114,6 +114,8 @@ export class ESBuild extends Stage {
 	}
 	
 	async #ensureWatchPaths(watchPaths) {
+		watchPaths = watchPaths.filter(watchPath => !/\/node_modules\//.test(watchPath));
+		
 		if (this.watchPaths.join(",") !== watchPaths.join(",")) {
 			this.watchPaths = watchPaths;
 			if (this.watcher)
