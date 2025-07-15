@@ -2,25 +2,24 @@ import { randomBytes } from "node:crypto";
 import { mkdir, rm } from "node:fs/promises";
 import { basename, join } from "node:path";
 import { Worker } from "node:worker_threads";
-import open from "open";
 import { COMPRESSION_LEVEL, zip } from "zip-a-folder";
 import { copyRecursive } from "#utils";
 import { Stage } from "./Stage.js";
 
-
-const radix = 36;
-const randomBytesSize = 12;
 
 /** @this Bundler */
 function defaultGetName() {
 	return `${this.conveyer.context.packageJSON.name}-${this.conveyer.context.packageJSON.version}`;
 }
 
+
 export class Bundler extends Stage {
 	constructor(options = {}) {
 		super({
 			symbol: "📦",
 			title: "Bundler",
+			getName: defaultGetName,
+			compressionLevel: "high",
 			...options
 		});
 		
@@ -33,33 +32,22 @@ export class Bundler extends Stage {
 		return super.handleInited();
 	}
 	
-	do = () => Bundler.#compress.call(this, this);
-	
-	
-	static async #compress({
-		destDir,
-		name,
-		getName = defaultGetName,
-		target: singleTarget,
-		targets = [ singleTarget ],
-		compressionLevel = "high",
-		context,
-		showInFolder = false
-	}) {
+	async do() {
 		
-		targets = [
-			...targets,
-			...context?.targets ?? []
+		const targets = [
+			this.target,
+			...this.targets ?? [],
+			...this.context?.targets ?? []
 		].filter(Boolean);
 		
 		if (!targets.length)
 			return;
 		
-		const tempDir = join(destDir, `bundle-${Date.now().toString(radix)}${randomBytes(randomBytesSize).toString("hex")}`);
+		const tempDir = join(this.destDir, `bundle-${Date.now().toString(36)}${randomBytes(12).toString("hex")}`);
 		
 		await mkdir(tempDir, { recursive: true });
 		
-		const bundleFileName = join(destDir, `${name || getName.call(this, this)}.zip`);
+		const bundleFileName = join(this.destDir, `${this.name || this.getName(this)}.zip`);
 		
 		await rm(bundleFileName, { force: true });
 		
@@ -78,15 +66,14 @@ export class Bundler extends Stage {
 			
 		}));
 		
-		await zip(tempDir, bundleFileName, { compression: COMPRESSION_LEVEL[compressionLevel] });
+		await zip(tempDir, bundleFileName, { compression: COMPRESSION_LEVEL[this.compressionLevel] });
 		
 		await rm(tempDir, { recursive: true, force: true });
 		
-		if (showInFolder)
-			open(destDir);
+		this.onDone?.(bundleFileName);
 		
-		return bundleFileName;
 	}
+	
 	
 	static #zipWorker({ src, dest }) {
 		return new Promise((resolve, reject) => {
