@@ -7,3 +7,4 @@ export * from "./oraOptions";
 export * from "./Packages";
 export * from "./pathExists";
 export * from "./require";
+export * from "./reveal";

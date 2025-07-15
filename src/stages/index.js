@@ -8,4 +8,5 @@ export * from "./MongodProcess.js";
 export * from "./NginxProcess.js";
 export * from "./NodeProcess.js";
 export * from "./PackageJSONMaker.js";
+export * from "./Reveal.js";
 export * from "./Stage.js";
