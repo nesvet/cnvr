@@ -90,6 +90,7 @@ export class Stage {
 					stabilityThreshold: 500,
 					pollInterval: 50
 				},
+				followSymlinks: false,
 				...this.watchOptions
 			});
 			
