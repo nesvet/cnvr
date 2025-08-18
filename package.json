@@ -1,13 +1,13 @@
 {
-	"name": "@nesvet/conveyer",
+	"name": "cnvr",
 	"version": "2.7.0",
 	"description": "Project build/dev pipeline",
 	"type": "module",
 	"module": "./dist/index.js",
 	"main": "./dist/index.js",
 	"bin": {
-		"@nesvet/conveyer": "./cli/js.js",
-		"@nesvet/conveyer-ts": "./cli/ts.ts"
+		"cnvr": "./cli/js.js",
+		"cnvr-ts": "./cli/ts.ts"
 	},
 	"imports": {
 		"#utils": "./src/utils/index.ts"
@@ -19,7 +19,7 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/nesvet/conveyer.git"
+		"url": "git+https://github.com/nesvet/cnvr.git"
 	},
 	"keywords": [
 		"build",

@@ -3,11 +3,11 @@
 ## Installation
 
 ```sh
-$ npm install @nesvet/conveyer --save-dev
+$ npm install cnvr --save-dev
 ```
 
 Or
 
 ```sh
-$ bun add @nesvet/conveyer --dev
+$ bun add cnvr --dev
 ```
