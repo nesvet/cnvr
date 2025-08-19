@@ -240,42 +240,21 @@ function parse(content: string): ParseResult {
 	return interpolateVariables(result);
 }
 
-function findExistingFile(candidates: string[]): string | null {
-	for (const path of candidates)
-		if (statSync(path, { throwIfNoEntry: false })?.isFile())
-			return path;
+function loadOne(candidates: string[]) {
+	let filePath = candidates.find(candidate => statSync(candidate, { throwIfNoEntry: false })?.isFile());
 	
-	return null;
-}
-
-
-function load(fileName: string, dirName = ""): boolean {
-	const isAbsolutePath = isAbsolute(fileName);
-	const baseName = isAbsolutePath ? basename(fileName) : fileName;
+	if (!filePath)
+		return;
 	
-	const resolvedPath = findExistingFile((
-		isAbsolutePath ?
-			[ fileName ] :
-			[
-				resolve(dirName, baseName),
-				resolve(dirName, `.${baseName}`),
-				resolve(dirName, `${baseName}.env`),
-				resolve(dirName, `.env.${baseName}`)
-			]
-	).filter(candidatePath => /\.env(?:\W|$)|(?:\W|^)env\./.test(basename(candidatePath))));
+	filePath = realpathSync(filePath);
 	
-	if (!resolvedPath)
-		return false;
+	if (loadedFilePaths.has(filePath))
+		return;
 	
-	const realPath = realpathSync(resolvedPath);
-	
-	if (loadedFilePaths.has(realPath))
-		return true;
-	
-	loadedFilePaths.add(realPath);
+	loadedFilePaths.add(filePath);
 	
 	try {
-		let content = readFileSync(realPath, "utf8");
+		let content = readFileSync(filePath, "utf8");
 		
 		if (content.codePointAt(0) === 0xfeff)
 			content = content.slice(1);
@@ -283,20 +262,43 @@ function load(fileName: string, dirName = ""): boolean {
 		const parsed = parse(content);
 		
 		const params: Params =
-			paramsMap[basename(realPath)] = {
-				dir: dirname(realPath),
-				vars: Object.keys(parsed)
-			};
+				paramsMap[basename(filePath)] = {
+					dir: dirname(filePath),
+					vars: Object.keys(parsed)
+				};
 		
 		for (const [ key, value ] of Object.entries(parsed)) {
 			process.env[key] = value;
 			params.vars.push(key);
 		}
 	} catch (error) {
-		throw new Error(`Failed to parse environment variables in ${realPath}`, { cause: error });
+		throw new Error(`Failed to parse environment variables in ${filePath}`, { cause: error });
 	}
+}
+
+function load(name: string, dirName = "") {
 	
-	return true;
+	const candidates = (
+		name ?
+			isAbsolute(name) ?
+				[ name ] :
+				(
+					/\.env(?:\W|$)|(?:\W|^)env\./.test(name) ? [
+						name,
+						...name.startsWith(".") ? [] : [ `.${name}` ]
+					] : [
+						`${name}.env`,
+						...name.startsWith(".") ? [] : [ `.${name}.env` ],
+						`.env.${name}`
+					]
+				).map(fileName => resolve(dirName, fileName)) :
+			[ resolve(dirName, ".env") ]
+	);
+	
+	loadOne(candidates);
+	
+	loadOne(candidates.map(candidate => `${candidate}.local`));
+	
 }
 
 
@@ -304,8 +306,7 @@ export function env(dirName = Packages.getClosestPackageDir(process.argv[1]), en
 	
 	const { argv } = process;
 	
-	load(".env", dirName);
-	load(".env.local", dirName);
+	load("", dirName);
 	
 	const initialNodeEnv = process.env.NODE_ENV;
 	const isDevFlag = argv.includes("--development") || argv.includes("-d");
@@ -324,23 +325,15 @@ export function env(dirName = Packages.getClosestPackageDir(process.argv[1]), en
 		else
 			determinedNodeEnv = "development";
 	
-	if (determinedNodeEnv) {
-		load(`.env.${determinedNodeEnv}`, dirName);
-		load(`.env.${determinedNodeEnv}.local`, dirName);
-	}
+	if (determinedNodeEnv)
+		load(determinedNodeEnv, dirName);
 	
 	for (let i = 2; i < argv.length; i++)
-		if ((argv[i] === "-e" || argv[i] === "--env") && argv[i + 1]) {
-			i++;
-			
-			load(argv[i], dirName);
-			load(`${argv[i]}.local`, dirName);
-		}
+		if ((argv[i] === "-e" || argv[i] === "--env") && argv[i + 1])
+			load(argv[++i], dirName);
 	
-	if (envName) {
-		load(`.env.${envName}`, dirName);
-		load(`.env.${envName}.local`, dirName);
-	}
+	if (envName)
+		load(envName, dirName);
 	
 	process.env.NODE_ENV = determinedNodeEnv;
 	
