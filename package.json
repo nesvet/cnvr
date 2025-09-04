@@ -12,7 +12,7 @@
 	"imports": {
 		"#utils": "./src/utils/index.ts"
 	},
-	"packageManager": "bun@1.2.20",
+	"packageManager": "bun@1.2.21",
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
 		"b": "bun .conveyer.js --production && tsc -p ."
@@ -45,12 +45,13 @@
 		"ora": "^8.2.0",
 		"process-request": "^1.1.7",
 		"resolve-package-path": "^4.0.3",
-		"tsx": "^4.20.4",
+		"tsx": "^4.20.5",
 		"zip-a-folder": "^3.1.9"
 	},
 	"devDependencies": {
 		"@nesvet/eslint-config": "^2.1.2",
-		"@types/node": "^24.3.0",
-		"typescript": "^5.9.2"
+		"@types/node": "^24.3.1",
+		"typescript": "^5.9.2",
+		"type-fest": "^4.41.0"
 	}
 }
