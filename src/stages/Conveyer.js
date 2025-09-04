@@ -1,15 +1,15 @@
 import { existsSync, readFileSync } from "node:fs";
-import { readdir, readFile, rm } from "node:fs/promises";
+import { readdir, rm } from "node:fs/promises";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import chalk from "chalk";
-import { watch } from "chokidar";
 import { RequestListener, RequestSender } from "process-request";
 import {
 	env,
 	log,
+	packageJSON,
 	Packages,
-	setNodePath
+	setNodePath,
+	watchPackageJSON
 } from "#utils";
 
 
@@ -51,6 +51,8 @@ if (bundleArg)
 	process.env.BUNDLE = bundleArg.includes("=") ? bundleArg.split("=")[1] : "true";
 
 
+process.env.VERSION = packageJSON.version;
+
 const { NODE_ENV, WATCH, IS_ENTRYPOINT } = process.env;
 
 const stagesFlatDepth = 3;
@@ -81,13 +83,7 @@ export class Conveyer {
 		this.isEntrypoint = !!IS_ENTRYPOINT;
 		
 		if (WATCH)
-			this.watchers.push(watch("package.json", {
-				ignoreInitial: true,
-				awaitWriteFinish: {
-					stabilityThreshold: 500,
-					pollInterval: 50
-				}
-			}).on("all", this.#handlePackageJSONChange));
+			this.watchers.push(watchPackageJSON(this.#handlePackageJSONChange));
 		
 		let i = 1;
 		for (const stage of stages.flat(stagesFlatDepth))
@@ -119,31 +115,29 @@ export class Conveyer {
 			new RequestListener(process, method => this[method]());
 		}
 		
-		this.#handlePackageJSONChange()
-			.then(() => this.init());
+		this.init();
 		
 	}
 	
 	stages = new Map();
 	
 	context = {
-		conveyerVersion: JSON.parse(readFileSync(path.join(Packages.getClosestPackageDir(fileURLToPath(import.meta.url)), "package.json"))).version
+		conveyerVersion: JSON.parse(readFileSync(path.join(Packages.getClosestPackageDir(import.meta.filename), "package.json"))).version,
+		packageJSON
 	};
 	
 	watchers = [];
 	
-	#handlePackageJSONChange = async () => {
+	#handlePackageJSONChange = ({ name, version }) => {
 		
-		const packageJSON = JSON.parse(await readFile("package.json", "utf8"));
-		
-		this.title = `${packageJSON.name}${this.name ? `/${this.name}` : ""}`;
-		this.version = packageJSON.version;
-		
-		this.context.packageJSON = packageJSON;
+		this.title = `${name}${this.name ? `/${this.name}` : ""}`;
+		this.version = version;
 		
 	};
 	
 	async init() {
+		
+		this.#handlePackageJSONChange(packageJSON);
 		
 		if (this.isEntrypoint)
 			this.requestSender.send("init", this.options, NODE_ENV);

@@ -4,6 +4,7 @@ export * from "./isRunning";
 export * from "./log";
 export * from "./nodePath";
 export * from "./oraOptions";
+export * from "./packageJSON";
 export * from "./Packages";
 export * from "./pathExists";
 export * from "./require";
