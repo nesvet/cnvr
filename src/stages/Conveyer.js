@@ -5,6 +5,7 @@ import chalk from "chalk";
 import { RequestListener, RequestSender } from "process-request";
 import {
 	env,
+	getCurrentCommitId,
 	log,
 	packageJSON,
 	Packages,
@@ -52,6 +53,9 @@ if (bundleArg)
 
 
 process.env.VERSION = packageJSON.version;
+
+process.env.GIT_COMMIT_ID = await getCurrentCommitId();
+
 
 const { NODE_ENV, WATCH, IS_ENTRYPOINT } = process.env;
 

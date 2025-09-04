@@ -1,5 +1,6 @@
 export * from "./copyRecursive";
 export * from "./env";
+export * from "./git";
 export * from "./isRunning";
 export * from "./log";
 export * from "./nodePath";
