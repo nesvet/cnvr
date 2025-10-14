@@ -1,9 +1,9 @@
 import childProcess from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
-import anymatch from "anymatch";
 import chalk from "chalk";
 import { watch } from "chokidar";
+import micromatch from "micromatch";
 import { RequestListener, RequestSender } from "process-request";
 import { debounce } from "@nesvet/n";
 import { log, Packages } from "#utils";
@@ -266,7 +266,7 @@ export class Entrypoint {
 								}
 					} while (dirName !== pkg.path);
 					
-					if (!matchersToIgnore.length || !anymatch(matchersToIgnore, fileName)) {
+					if (!matchersToIgnore.length || !micromatch(matchersToIgnore, fileName)) {
 						if (watcher[rebuildSymbol]) {
 							await log.progress({ symbol: "🏗️ ", title: "Rebuilding" }, pkg.name);
 							try {

@@ -2,8 +2,8 @@ import childProcess from "node:child_process";
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import anymatch from "anymatch";
 import { compareVersions } from "compare-versions";
+import micromatch from "micromatch";
 import resolvePackagePath from "resolve-package-path";
 import { debounce, getPath, setPath } from "@nesvet/n";
 
@@ -233,8 +233,8 @@ export class Packages extends PackageMap {
 		
 		const parseOptions = {
 			map: this,
-			localMatcher: local && anymatch(local),
-			externalMatcher: external && anymatch(external),
+			localMatcher: local && micromatch.matcher(local),
+			externalMatcher: external && micromatch.matcher(external),
 			...restOptions
 		};
 		
