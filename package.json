@@ -39,7 +39,7 @@
 		"chalk": "^5.6.2",
 		"chokidar": "^4.0.3",
 		"esbuild": "^0.25.11",
-		"esbuild-plugin-jscc": "^1.1.1",
+		"esbuild-plugin-jscc": "^1.1.2",
 		"micromatch": "^4.0.8",
 		"ora": "^9.0.0",
 		"process-request": "^1.1.7",
