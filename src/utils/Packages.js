@@ -70,26 +70,8 @@ class Package {
 		return Package.bumpVersion(this);
 	}
 	
-	
-	static bumpVersion = debounce(async pkg => {
-		
-		try {
-			const packageJSONFileName = path.join(pkg.path, "package.json");
-			const packageJSON = await readFile(packageJSONFileName, "utf8");
-			
-			const { version } = JSON.parse(packageJSON);
-			
-			if (pkg.version === version) {
-				const [ , major, minor, patch ] = version.match(semVerRegExp);
-				
-				pkg.version = `${major}.${minor}.${Number.parseInt(patch) + 1}`;
-				
-				await writeFile(packageJSONFileName, packageJSON.replace(new RegExp(`(\\n\\s+"version"\\s*:\\s*")${version}(",?\\n)`), `$1${pkg.version}$2`), "utf8");
-			} else
-				pkg.version = version;
-		} catch {}
-		
-	}, 1000, { leading: false, trailing: true });
+	// Temporary off
+	static bumpVersion = noop;
 	
 }
 
