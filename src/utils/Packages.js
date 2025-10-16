@@ -1,22 +1,22 @@
 import childProcess from "node:child_process";
 import { existsSync, readFileSync, statSync } from "node:fs";
-import { readFile, writeFile } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { compareVersions } from "compare-versions";
+import { compareVersions, satisfies } from "compare-versions";
 import micromatch from "micromatch";
 import resolvePackagePath from "resolve-package-path";
-import { debounce, getPath, setPath } from "@nesvet/n";
+import { getPath, noop, setPath } from "@nesvet/n";
 
 
 const nodeModulesRegExp = /\/node_modules\//;
-
-const semVerRegExp = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[A-Za-z-][\dA-Za-z-]*)(?:\.(?:0|[1-9]\d*|\d*[A-Za-z-][\dA-Za-z-]*))*))?(?:\+([\dA-Za-z-]+(?:\.[\dA-Za-z-]+)*))?$/;
 
 const nameBaseRegExp = /(?:@[\da-z~-][\d._a-z~-]*\/)?[\da-z~-][\d._a-z~-]*/;
 
 const nameRegExp = new RegExp(`^${nameBaseRegExp.source}$`);
 
 const trimExportsRegExp = new RegExp(`^(${nameBaseRegExp.source})/.+$`);
+
+const packageJSONCache = new Map();
 
 
 class Package {
@@ -44,9 +44,12 @@ class Package {
 		if (props)
 			for (const prop of props) {
 				const value = getPath(restPackageJSON, prop);
+				
 				if (value)
 					setPath(this, prop, value);
 			}
+		
+		Packages.all.set(name, this);
 		
 	}
 	
@@ -88,7 +91,8 @@ function parse(packagePath, options, isSource) {
 		optional: isOptional,
 		peer: isPeer,
 		props,
-		sourcePath
+		unresolvedDependencies,
+		versionMismatches
 	} = options;
 	
 	const {
@@ -98,7 +102,7 @@ function parse(packagePath, options, isSource) {
 		optionalDependencies,
 		peerDependencies,
 		...restPackageJSON
-	} = JSON.parse(readFileSync(path.join(packagePath, "package.json"), "utf8"));
+	} = Packages.getParsedPackageJSON(path.join(packagePath, "package.json"));
 	
 	if (!map.has(name)) {
 		const isLocal = localMatcher?.(name) || (!nodeModulesRegExp.test(packagePath) && !externalMatcher?.(name));
@@ -114,17 +118,37 @@ function parse(packagePath, options, isSource) {
 		
 		map.set(name, pkg);
 		
-		if (isSource || isLocal)
-			for (const dependencyName of Object.keys({
+		if (isSource || isLocal) {
+			const declaredDependencies = {
 				...dependencies,
 				...isDev && devDependencies,
 				...isOptional && optionalDependencies,
 				...isPeer && peerDependencies
-			})) {
-				const dependencyPackageJSONPath = resolvePackagePath(dependencyName, sourcePath);
-				if (dependencyPackageJSONPath)
+			};
+			
+			for (const dependencyName of Object.keys(declaredDependencies)) {
+				const dependencyPackageJSONPath = resolvePackagePath(dependencyName, packagePath);
+				
+				if (dependencyPackageJSONPath) {
+					const declaredVersionRange = declaredDependencies[dependencyName];
+					const actualVersion = Packages.getParsedPackageJSON(dependencyPackageJSONPath).version;
+					
+					if (declaredVersionRange && actualVersion)
+						try {
+							if (!satisfies(actualVersion, declaredVersionRange))
+								versionMismatches.push({
+									consumer: name,
+									dependency: dependencyName,
+									declared: declaredVersionRange,
+									actual: actualVersion
+								});
+						} catch {}
+					
 					parse(path.dirname(dependencyPackageJSONPath), options);
+				} else
+					unresolvedDependencies.set(dependencyName, name);
 			}
+		}
 	}
 	
 }
@@ -136,17 +160,17 @@ function sortPackages(a, b) {
 
 export class PackageMap extends Map {
 	
-	#local;
+	#local = null;
 	get local() {
 		return (this.#local ??= new PackageMap([ ...this.entries() ].filter(([ , pkg ]) => pkg.isLocal)));
 	}
 	
-	#external;
+	#external = null;
 	get external() {
 		return (this.#external ??= new PackageMap([ ...this.entries() ].filter(([ , pkg ]) => pkg.isExternal)));
 	}
 	
-	#sources;
+	#sources = null;
 	get sources() {
 		return (this.#sources ??= new PackageMap([ ...this.entries() ].filter(([ , pkg ]) => pkg.isSource)));
 	}
@@ -174,7 +198,7 @@ export class PackageMap extends Map {
 		);
 	}
 	
-	#listWithoutSources;
+	#listWithoutSources = null;
 	get #withoutSources() {
 		return (this.#listWithoutSources ??= [ ...this.values() ].filter(pkg => !pkg.isSource));
 	}
@@ -196,6 +220,36 @@ export class PackageMap extends Map {
 		}, {});
 	}
 	
+	verifyExternal(metafile, cwd) {
+		
+		const illegallyBundled = [];
+		const absoluteInputPaths = Object.keys(metafile.inputs).map(inputPath => path.resolve(cwd, inputPath));
+		
+		for (const externalPkg of this.values())
+			if (absoluteInputPaths.some(inputPath => inputPath.startsWith(`${externalPkg.path}${path.sep}`)))
+				illegallyBundled.push(externalPkg.name);
+		
+		if (illegallyBundled.length)
+			throw new Error(
+				"The following packages were declared as external but were bundled anyway:\n" +
+				`${illegallyBundled.map(packageName => `• ${packageName}`).join("\n")}\n\n` +
+				"This usually means esbuild could not resolve these packages and fell back to bundling,\n" +
+				"which can lead to runtime errors like \"Dynamic require not supported\".\n" +
+				"Check your configuration and ensure these packages are resolvable from your project root."
+			);
+	}
+	
+	clear() {
+		
+		super.clear();
+		
+		this.#local = null;
+		this.#external = null;
+		this.#sources = null;
+		this.#listWithoutSources = null;
+		
+	}
+	
 	
 	static unite(...packageMaps) {
 		return new PackageMap(packageMaps.flatMap(packageMap => [ ...packageMap ]));
@@ -215,13 +269,30 @@ export class Packages extends PackageMap {
 		
 		const parseOptions = {
 			map: this,
-			localMatcher: local && micromatch.matcher(local),
-			externalMatcher: external && micromatch.matcher(external),
+			localMatcher: local && micromatch.matcher(local, { dot: true }),
+			externalMatcher: external && micromatch.matcher(external, { dot: true }),
+			unresolvedDependencies: new Map(),
+			versionMismatches: [],
 			...restOptions
 		};
 		
 		for (const packagePath of sources)
 			parse(packagePath, parseOptions, true);
+		
+		if (parseOptions.unresolvedDependencies.size)
+			throw new Error(
+				"Could not resolve the following dependencies:\n" +
+				`${[ ...parseOptions.unresolvedDependencies ].map(([ dependencyName, requiredBy ]) => `• ${dependencyName} (required by ${requiredBy})`).join("\n")}\n\n` +
+				"This means the packages are not declared in the correct package.json or could not be found in node_modules."
+			);
+		
+		if (parseOptions.versionMismatches.length)
+			console.warn(
+				"Version Mismatch Warning:\n" +
+				`${parseOptions.versionMismatches.map(({ consumer, dependency, declared, actual }) => `• ${consumer} wants ${dependency}@${declared}, but resolved to ${actual}`).join("\n")}\n\n` +
+				"This is often caused by dependency hoisting in a monorepo and might cause subtle bugs.\n" +
+				"Consider aligning the versions in your package.json files."
+			);
 		
 	}
 	
@@ -263,6 +334,51 @@ export class Packages extends PackageMap {
 	
 	static async resolveAndRead(target, baseDir = ".") {
 		return JSON.parse(await readFile(resolvePackagePath(target, baseDir), "utf8"));
+	}
+	
+	static getParsedPackageJSON(packageJSONPath) {
+		if (packageJSONCache.has(packageJSONPath))
+			return packageJSONCache.get(packageJSONPath);
+		
+		const {
+			name,
+			version,
+			dependencies,
+			devDependencies,
+			optionalDependencies,
+			peerDependencies,
+			scripts
+		} = JSON.parse(readFileSync(packageJSONPath, "utf8"));
+		
+		const packageJSON = {
+			name,
+			version,
+			dependencies,
+			devDependencies,
+			optionalDependencies,
+			peerDependencies,
+			...scripts && (scripts.prebuild || scripts.build || scripts.postbuild) && {
+				scripts: {
+					...scripts.prebuild && { prebuild: scripts.prebuild },
+					...scripts.build && { build: scripts.build },
+					...scripts.postbuild && { postbuild: scripts.postbuild }
+				}
+			}
+		};
+		
+		packageJSONCache.set(packageJSONPath, packageJSON);
+		
+		return packageJSON;
+	}
+	
+	static all = new PackageMap();
+	
+	static clearCache() {
+		
+		packageJSONCache.clear();
+		
+		this.all.clear();
+		
 	}
 	
 }

@@ -131,6 +131,9 @@ export class ESBuild extends Stage {
 		
 		const { metafile } = await this.buildContext.rebuild();
 		
+		if (this.local || this.external === true || this.external?.includes(true))
+			this.context.packages.external.verifyExternal(metafile, this.cwd);
+		
 		let isPathsChanged;
 		if (WATCH)
 			isPathsChanged = await this.#ensureWatchPaths(Packages.metaFileNames(metafile));
