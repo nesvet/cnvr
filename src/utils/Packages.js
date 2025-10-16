@@ -2,6 +2,7 @@ import childProcess from "node:child_process";
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
+import chalk from "chalk";
 import micromatch from "micromatch";
 import resolvePackagePath from "resolve-package-path";
 import { gt, satisfies, validRange } from "semver";
@@ -231,11 +232,8 @@ export class PackageMap extends Map {
 		
 		if (illegallyBundled.length)
 			throw new Error(
-				"The following packages were declared as external but were bundled anyway:\n" +
-				`${illegallyBundled.map(packageName => `• ${packageName}`).join("\n")}\n\n` +
-				"This usually means esbuild could not resolve these packages and fell back to bundling,\n" +
-				"which can lead to runtime errors like \"Dynamic require not supported\".\n" +
-				"Check your configuration and ensure these packages are resolvable from your project root."
+				`The following packages were declared as ${chalk.italic("external")} but were bundled anyway:\n` +
+				`${illegallyBundled.map(packageName => `  ${chalk.bold(packageName)}`).join("\n")}`
 			);
 	}
 	
@@ -282,17 +280,11 @@ export class Packages extends PackageMap {
 		if (parseOptions.unresolvedDependencies.size)
 			throw new Error(
 				"Could not resolve the following dependencies:\n" +
-				`${[ ...parseOptions.unresolvedDependencies ].map(([ dependencyName, requiredBy ]) => `• ${dependencyName} (required by ${requiredBy})`).join("\n")}\n\n` +
-				"This means the packages are not declared in the correct package.json or could not be found in node_modules."
+				`${[ ...parseOptions.unresolvedDependencies ].map(([ dependencyName, requiredBy ]) => `  ${chalk.bold(dependencyName)} ${chalk.italic(`(required by ${requiredBy})`)}`).join("\n")}`
 			);
 		
-		if (parseOptions.versionMismatches.length)
-			console.warn(
-				"Version Mismatch Warning:\n" +
-				`${parseOptions.versionMismatches.map(({ consumer, dependency, declared, actual }) => `• ${consumer} wants ${dependency}@${declared}, but resolved to ${actual}`).join("\n")}\n\n` +
-				"This is often caused by dependency hoisting in a monorepo and might cause subtle bugs.\n" +
-				"Consider aligning the versions in your package.json files."
-			);
+		for (const { consumer, dependency, declared, actual } of parseOptions.versionMismatches)
+			console.warn(`⚠️ Version Mismatch: ${chalk.bold(consumer)} wants ${chalk.bold(dependency)}@${chalk.underline(declared)}, but resolved to ${chalk.underline(actual)}`);
 		
 	}
 	
