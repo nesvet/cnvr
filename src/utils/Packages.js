@@ -2,9 +2,9 @@ import childProcess from "node:child_process";
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { compareVersions, satisfies } from "compare-versions";
 import micromatch from "micromatch";
 import resolvePackagePath from "resolve-package-path";
+import { gt, satisfies, validRange } from "semver";
 import { getPath, noop, setPath } from "@nesvet/n";
 
 
@@ -135,7 +135,7 @@ function parse(packagePath, options, isSource) {
 					
 					if (declaredVersionRange && actualVersion)
 						try {
-							if (!satisfies(actualVersion, declaredVersionRange))
+							if (validRange(declaredVersionRange) && !satisfies(actualVersion, declaredVersionRange))
 								versionMismatches.push({
 									consumer: name,
 									dependency: dependencyName,
@@ -213,7 +213,7 @@ export class PackageMap extends Map {
 	
 	asDependencies() {
 		return this.#withoutSources.sort(sortPackages).reduce((dependencies, pkg) => {
-			if (!dependencies[pkg.name] || compareVersions(pkg.version, dependencies[pkg.name]) === 1)
+			if (!dependencies[pkg.name] || gt(pkg.version, dependencies[pkg.name]))
 				dependencies[pkg.name] = pkg.version;
 			
 			return dependencies;
