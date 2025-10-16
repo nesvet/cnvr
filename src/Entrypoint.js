@@ -2,8 +2,6 @@ import childProcess from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import chalk from "chalk";
-import { watch } from "chokidar";
-import micromatch from "micromatch";
 import { RequestListener, RequestSender } from "process-request";
 import { debounce } from "@nesvet/n";
 import { log, Packages } from "#utils";
@@ -168,144 +166,23 @@ export class Entrypoint {
 		
 	};
 	
-	run() {
-		return this.requestSender.send("run")
-			.then(() => log(`✔️  ${chalk.underline("Passed")} ${chalk.bold.dim((Date.now() - this.initAt) / 1000)}`, "info", this.title))
-			.catch(() => log.finish());
+	async run() {
+		
+		try {
+			await this.requestSender.send("run");
+			
+			return await log(`✔️  ${chalk.underline("Passed")} ${chalk.bold.dim((Date.now() - this.initAt) / 1000)}`, "info", this.title);
+		} catch {
+			return log.finish();
+		}
 	}
 	
-	async watch() {
-		
-		await this.requestSender.send("watch");
-		
-		new Entrypoint.PackageWatcher(this.package, { chokidar: {
-			awaitWriteFinish: {
-				stabilityThreshold: 500,
-				pollInterval: 50
-			}
-		} });
-		
+	watch() {
+		return this.requestSender.send("watch");
 	}
 	
 	runWatchQueue() {
 		return this.requestSender.send("runWatchQueue");
-	}
-	
-	
-	static {
-		
-		const packageWatchers = new Map();
-		
-		const defaultIgnored = [
-			"node_modules",
-			"package.json",
-			"package-lock.json",
-			"yarn.lock",
-			"pnpm-lock.yaml",
-			"bun.lockb",
-			"Thumbs.db"
-		];
-		
-		const handlesSymbol = Symbol("handles");
-		const bumpVersionSymbol = Symbol("bumpVersion");
-		const rebuildSymbol = Symbol("rebuild");
-		
-		function PackageWatcher(pkg, {
-			chokidar: {
-				ignored: chokidarIgnored,
-				...restChokidarOptions
-			} = {},
-			handle,
-			bumpVersion: bumpVersionOnChange = true,
-			rebuild: rebuildOnChange
-		} = {}) {
-			
-			let watcher = packageWatchers.get(pkg.path);
-			
-			if (!watcher) {
-				watcher = watch(pkg.path, {
-					ignored: absolutePath => {
-						const basename = path.basename(absolutePath);
-						
-						return (
-							basename.startsWith(".") ||
-							basename.endsWith("ignore") ||
-							defaultIgnored.includes(basename) ||
-							!chokidarIgnored || (
-								Array.isArray(chokidarIgnored) ?
-									chokidarIgnored.some(pathToIgnore => path.isAbsolute(pathToIgnore) ? pathToIgnore === absolutePath : pathToIgnore === basename) :
-									typeof chokidarIgnored == "function" ?
-										chokidarIgnored(absolutePath) :
-										false
-							)
-						);
-					},
-					ignoreInitial: true,
-					...restChokidarOptions
-				});
-				
-				watcher[handlesSymbol] = new Set();
-				
-				watcher.on("all", async (event, fileName, stats) => {
-					
-					const matchersToIgnore = [];
-					
-					let dirName = fileName;
-					do {
-						dirName = path.dirname(dirName);
-						const gitignorePath = path.join(dirName, ".gitignore");
-						if (fs.existsSync(gitignorePath))
-							for (const line of (await fs.promises.readFile(gitignorePath, "utf8")).split("\n"))
-								if (!/^(#.*)?$/.test(line.trim())) {
-									let matcher = path.resolve(dirName, line);
-									try {
-										if ((await fs.promises.stat(matcher)).isDirectory())
-											matcher = path.resolve(matcher, "**");
-										matchersToIgnore.push(matcher);
-									} catch {}
-								}
-					} while (dirName !== pkg.path);
-					
-					if (!matchersToIgnore.length || !micromatch(matchersToIgnore, fileName)) {
-						if (watcher[rebuildSymbol]) {
-							await log.progress({ symbol: "🏗️ ", title: "Rebuilding" }, pkg.name);
-							try {
-								await pkg.rebuild();
-								log.finish();
-							} catch (error) {
-								log.finish();
-								await log(error.stack, "error");
-							}
-						}
-						
-						for (const watcherHandle of watcher[handlesSymbol])
-							await watcherHandle(event, fileName, stats);
-						
-						if (watcher[bumpVersionSymbol]) {
-							await pkg.bumpVersion();
-							await log(`🚀 ${pkg.version}`, "info", pkg.name);
-						}
-					}
-					
-				});
-				
-				packageWatchers.set(pkg.path, watcher);
-			}
-			
-			if (handle)
-				watcher[handlesSymbol].add(handle);
-			
-			if (bumpVersionOnChange)
-				watcher[bumpVersionSymbol] = true;
-			
-			if (rebuildOnChange)
-				watcher[rebuildSymbol] = true;
-			
-			return watcher;
-		}
-		
-		this.PackageWatcher = PackageWatcher;
-		
 	}
 	
 }
@@ -322,11 +199,14 @@ class BuildableDependency {
 	async run() {
 		
 		await log.progress({ symbol: "🏗️ " }, this.package.name);
+		
 		try {
 			await this.package.rebuild();
+			
 			log.finish();
 		} catch (error) {
 			log.finish();
+			
 			await log(error.stack, "error");
 		}
 		
@@ -334,10 +214,7 @@ class BuildableDependency {
 	
 	watch() {
 		
-		new Entrypoint.PackageWatcher(this.package, {
-			bumpVersion: true,
-			rebuild: true
-		});
+		// TODO:
 		
 	}
 	
