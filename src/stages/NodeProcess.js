@@ -1,5 +1,3 @@
-import { resolve } from "node:path";
-import { Packages } from "#utils";
 import { ChildProcess } from "./ChildProcess.js";
 
 
@@ -35,13 +33,6 @@ export class NodeProcess extends ChildProcess {
 			...restOptions
 		});
 		
-	}
-	
-	do(isInitial) {
-		if (isInitial)
-			this.watchPaths.unshift(Packages.getClosestPackageDir(resolve(this.cwd ?? "", this.entry)));
-		
-		return super.do();
 	}
 	
 }

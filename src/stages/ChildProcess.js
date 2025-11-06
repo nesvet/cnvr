@@ -24,6 +24,8 @@ export class ChildProcess extends Stage {
 			filterStdout,
 			filterStderr,
 			isDetached: false,
+			stopTimeout: 10000,
+			killTimeout: 5000,
 			...restOptions,
 			watch: {
 				paths: [],
@@ -47,14 +49,13 @@ export class ChildProcess extends Stage {
 			console.warn(`⚠️${this.symbol} ${this.title} is already running`);
 		} else {
 			this.#process = childProcess.spawn(this.command, this.args, {
-				detached: true,
+				detached: this.isDetached,
 				stdio: this.stdio,
 				env: { ...process.env, ...this.env },
 				cwd: this.cwd
 			});
 			
-			if (!this.isDetached)
-				this.#process.on("exit", this.watchdog ? this.#handleWatchdogExit : this.#handleExit);
+			this.#process.on("exit", this.watchdog ? this.#handleWatchdogExit : this.#handleExit);
 			
 			if (this.stdio.includes("ipc"))
 				this.#process.on("message", this.#handleMessage);
@@ -82,7 +83,15 @@ export class ChildProcess extends Stage {
 	
 	stop() {
 		
-		process.kill(-this.#process.pid, "SIGKILL");
+		if (!this.#process)
+			return;
+		
+		try {
+			if (this.isDetached)
+				process.kill(-this.#process.pid, "SIGTERM");
+			else
+				this.#process.kill("SIGTERM");
+		} catch {}
 		
 	}
 	
@@ -90,14 +99,37 @@ export class ChildProcess extends Stage {
 		
 		if (this.#process) {
 			this.#isRestarting = true;
-			if (this.isDetached)
-				this.stop();
-			else
-				await new Promise(resolve => {
-					this.#process.on("exit", resolve);
-					this.stop();
-					
+			
+			const subprocess = this.#process;
+			let isExited = false;
+			
+			await new Promise(resolve => {
+				const timeout = setTimeout(() => {
+					if (!isExited) {
+						try {
+							if (this.isDetached)
+								process.kill(-subprocess.pid, "SIGKILL");
+							else
+								subprocess.kill("SIGKILL");
+						} catch {}
+						
+						setTimeout(resolve, this.killTimeout);
+					}
+				}, this.stopTimeout);
+				
+				subprocess.once("exit", () => {
+					isExited = true;
+					clearTimeout(timeout);
+					resolve();
 				});
+				
+				this.stop();
+				
+			});
+			
+			if (this.#process === subprocess)
+				this.#process = null;
+			
 			this.#isRestarting = false;
 		}
 		
