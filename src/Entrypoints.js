@@ -10,7 +10,7 @@ import { Entrypoint } from "./Entrypoint.js";
 const { FORCE } = process.env;
 
 export const validExtensions = [ "js", "cjs", "mjs", "ts" ];
-const fileRegex = new RegExp(`^\\.conveyer\\.(${validExtensions.join("|")})$`);
+const fileRegex = new RegExp(String.raw`^\.conveyer\.(${validExtensions.join("|")})$`);
 
 const argsWithValue = [
 	[ "-e", "--env" ]
