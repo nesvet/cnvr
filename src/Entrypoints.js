@@ -3,7 +3,7 @@ import { isAbsolute, resolve } from "node:path";
 import { watch } from "chokidar";
 import { sleep } from "@nesvet/n";
 import "./env.js";
-import { log, setNodePath } from "#utils";
+import { log, Packages, setNodePath } from "#utils";
 import { Entrypoint } from "./Entrypoint.js";
 
 
@@ -41,6 +41,17 @@ export class Entrypoints extends Map {
 		
 		if (!conveyerFileNames)
 			return log("❌ No valid conveyer entrypoints", "error");
+		
+		const projectRoot = Packages.getClosestPackageDir(conveyerFileNames[0]);
+		
+		if (projectRoot) {
+			process.env.CONVEYER_PROJECT_ROOT = projectRoot;
+			
+			const workspaceRoot = projectRoot && Packages.findWorkspaceRoot(projectRoot);
+			
+			if (workspaceRoot)
+				process.env.CONVEYER_WORKSPACE_ROOT = workspaceRoot;
+		}
 		
 		for (const conveyerFileName of conveyerFileNames)
 			if (!entrypointFileNames.includes(conveyerFileName))

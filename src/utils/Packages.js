@@ -134,7 +134,15 @@ function parse(packagePath, options, isSource) {
 			};
 			
 			for (const dependencyName of Object.keys(declaredDependencies)) {
-				const dependencyPackageJSONPath = resolvePackagePath(dependencyName, packagePath);
+				const dependencyPackageJSONPath = [
+					packagePath,
+					options.sourcePath,
+					process.env.CONVEYER_PROJECT_ROOT,
+					process.env.CONVEYER_WORKSPACE_ROOT
+				].reduce((found, baseDir) =>
+					found || (baseDir && resolvePackagePath(dependencyName, baseDir)),
+				null
+				);
 				
 				if (dependencyPackageJSONPath) {
 					const declaredVersionRange = declaredDependencies[dependencyName];
@@ -326,6 +334,28 @@ export class Packages extends PackageMap {
 		return dirName;
 	}
 	
+	static findWorkspaceRoot(startPath) {
+		let currentDir = resolve(startPath);
+		
+		if (existsSync(currentDir) && statSync(currentDir).isFile())
+			currentDir = dirname(currentDir);
+		
+		while (currentDir) {
+			const packageJSONPath = join(currentDir, "package.json");
+			
+			if (existsSync(packageJSONPath) && this.getParsedPackageJSON(packageJSONPath)?.workspaces)
+				return currentDir;
+			
+			const parentDir = dirname(currentDir);
+			if (currentDir === parentDir)
+				break;
+			
+			currentDir = parentDir;
+		}
+		
+		return null;
+	}
+	
 	static resolvePath(target, baseDir = ".") {
 		return resolvePackagePath(target, baseDir);
 	}
@@ -345,7 +375,8 @@ export class Packages extends PackageMap {
 			devDependencies,
 			optionalDependencies,
 			peerDependencies,
-			scripts
+			scripts,
+			workspaces
 		} = JSON.parse(readFileSync(packageJSONPath, "utf8"));
 		
 		const packageJSON = {
@@ -355,6 +386,7 @@ export class Packages extends PackageMap {
 			devDependencies,
 			optionalDependencies,
 			peerDependencies,
+			...workspaces && { workspaces },
 			...scripts && (scripts.prebuild || scripts.build || scripts.postbuild) && {
 				scripts: {
 					...scripts.prebuild && { prebuild: scripts.prebuild },
