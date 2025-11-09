@@ -1,7 +1,13 @@
-import childProcess from "node:child_process";
+import { spawn } from "node:child_process";
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { readFile } from "node:fs/promises";
-import path from "node:path";
+import {
+	dirname,
+	isAbsolute,
+	join,
+	resolve,
+	sep
+} from "node:path";
 import chalk from "chalk";
 import micromatch from "micromatch";
 import resolvePackagePath from "resolve-package-path";
@@ -58,12 +64,12 @@ class Package {
 		
 		for (const scriptName of [ "prebuild", "build", "postbuild" ])
 			if (this.scripts[scriptName])
-				await new Promise((resolve, reject) => {
+				await new Promise((_resolve, reject) => {
 					
 					const [ command, ...args ] = this.scripts[scriptName].split(/\s+/);
 					
-					childProcess.spawn(command, args, { cwd: this.path })
-						.on("exit", resolve)
+					spawn(command, args, { cwd: this.path })
+						.on("exit", _resolve)
 						.on("error", reject);
 					
 				});
@@ -103,7 +109,7 @@ function parse(packagePath, options, isSource) {
 		optionalDependencies,
 		peerDependencies,
 		...restPackageJSON
-	} = Packages.getParsedPackageJSON(path.join(packagePath, "package.json"));
+	} = Packages.getParsedPackageJSON(join(packagePath, "package.json"));
 	
 	if (!map.has(name)) {
 		const isLocal = localMatcher?.(name) || (!nodeModulesRegExp.test(packagePath) && !externalMatcher?.(name));
@@ -145,7 +151,7 @@ function parse(packagePath, options, isSource) {
 								});
 						} catch {}
 					
-					parse(path.dirname(dependencyPackageJSONPath), options);
+					parse(dirname(dependencyPackageJSONPath), options);
 				} else
 					unresolvedDependencies.set(dependencyName, name);
 			}
@@ -224,10 +230,10 @@ export class PackageMap extends Map {
 	verifyExternal(metafile, cwd) {
 		
 		const illegallyBundled = [];
-		const absoluteInputPaths = Object.keys(metafile.inputs).map(inputPath => path.resolve(cwd, inputPath));
+		const absoluteInputPaths = Object.keys(metafile.inputs).map(inputPath => resolve(cwd, inputPath));
 		
 		for (const externalPkg of this.values())
-			if (absoluteInputPaths.some(inputPath => inputPath.startsWith(`${externalPkg.path}${path.sep}`)))
+			if (absoluteInputPaths.some(inputPath => inputPath.startsWith(`${externalPkg.path}${sep}`)))
 				illegallyBundled.push(externalPkg.name);
 		
 		if (illegallyBundled.length)
@@ -296,20 +302,20 @@ export class Packages extends PackageMap {
 	static nameRegExp = nameRegExp;
 	
 	static metaFileNames(metafile, cwd) {
-		const map = cwd ? fileName => path.resolve(cwd, fileName) : fileName => path.resolve(fileName);
+		const map = cwd ? fileName => resolve(cwd, fileName) : fileName => resolve(fileName);
 		
 		return Object.values(metafile.outputs).filter(output => output.entryPoint).flatMap(output => Object.keys(output.inputs).map(map));
 	}
 	
 	static getClosestPackageDir(dirName) {
-		if (!path.isAbsolute(dirName))
-			dirName = path.resolve(dirName);
+		if (!isAbsolute(dirName))
+			dirName = resolve(dirName);
 		
 		if (statSync(dirName).isFile())
-			dirName = path.dirname(dirName);
+			dirName = dirname(dirName);
 		
-		while (!existsSync(path.join(dirName, "package.json"))) {
-			const parentDirName = path.dirname(dirName);
+		while (!existsSync(join(dirName, "package.json"))) {
+			const parentDirName = dirname(dirName);
 			if (dirName === parentDirName) {
 				dirName = null;
 				break;
