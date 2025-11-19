@@ -34,26 +34,26 @@
 	],
 	"author": "Eugene Nesvetaev <dev@nesvet.dev> (https://nesvet.dev/)",
 	"license": "MIT",
+	"peerDependencies": {
+		"tsx": "^4"
+	},
 	"dependencies": {
 		"@nesvet/n": "^1.2.1",
 		"chalk": "^5.6.2",
 		"chokidar": "^4.0.3",
-		"esbuild": "^0.26.0",
+		"esbuild": "^0.27.0",
 		"esbuild-plugin-jscc": "^1.1.2",
 		"micromatch": "^4.0.8",
 		"ora": "^9.0.0",
 		"process-request": "^1.1.7",
 		"resolve-package-path": "^4.0.3",
 		"semver": "^7.7.3",
-		"zip-a-folder": "^3.1.9"
+		"zip-a-folder": "^4.0.4"
 	},
 	"devDependencies": {
-		"@nesvet/eslint-config": "^2.1.5",
-		"@types/node": "^24.10.0",
+		"@nesvet/eslint-config": "^2.2.0",
+		"@types/node": "^24.10.1",
 		"type-fest": "^5.2.0",
 		"typescript": "^5.9.3"
-	},
-	"peerDependencies": {
-		"tsx": "^4.20.6"
 	}
 }
