@@ -27,7 +27,10 @@ export class ESBuild extends Stage {
 			symbol: "🔨",
 			title: "esbuild",
 			mainFields: [ "module", "main" ],
-			loader: { ".node": "file" },
+			loader: {
+				".node": "file",
+				".css": "text"
+			},
 			...NODE_ENV === "production" && {
 				legalComments: "none",
 				minify: true,
