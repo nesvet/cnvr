@@ -298,7 +298,7 @@ export class Packages extends PackageMap {
 			);
 		
 		for (const { consumer, dependency, declared, actual } of parseOptions.versionMismatches)
-			console.warn(`⚠️ Version Mismatch: ${chalk.bold(consumer)} wants ${chalk.bold(dependency)}@${chalk.underline(declared)}, but resolved to ${chalk.underline(actual)}`);
+			console.warn(`⚠️  Version Mismatch: ${chalk.bold(consumer)} wants ${chalk.bold(dependency)}@${chalk.underline(declared)}, but resolved to ${chalk.underline(actual)}`);
 		
 	}
 	
