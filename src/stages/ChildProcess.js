@@ -1,5 +1,5 @@
-import childProcess from "node:child_process";
-import path from "node:path";
+import { execSync, spawn } from "node:child_process";
+import { parse } from "node:path";
 import { noop } from "@nesvet/n";
 import { isRunning } from "#utils";
 import { Stage } from "./Stage.js";
@@ -16,7 +16,7 @@ export class ChildProcess extends Stage {
 			checkIfRunning: false,
 			args: [],
 			stdio: [
-				"inherit",
+				"ignore",
 				filterStdout ? "pipe" : "inherit",
 				filterStderr ? "pipe" : "inherit",
 				"ipc"
@@ -24,8 +24,8 @@ export class ChildProcess extends Stage {
 			filterStdout,
 			filterStderr,
 			isDetached: false,
-			stopTimeout: 10000,
-			killTimeout: 5000,
+			stopTimeout: 3000,
+			killTimeout: 1000,
 			...restOptions,
 			watch: {
 				paths: [],
@@ -48,7 +48,7 @@ export class ChildProcess extends Stage {
 			this.stop = noop;
 			console.warn(`⚠️${this.symbol} ${this.title} is already running`);
 		} else {
-			this.#process = childProcess.spawn(this.command, this.args, {
+			this.#process = spawn(this.command, this.args, {
 				detached: this.isDetached,
 				stdio: this.stdio,
 				env: { ...process.env, ...this.env },
@@ -81,16 +81,69 @@ export class ChildProcess extends Stage {
 		
 	}
 	
-	stop() {
+	stop(signalOrCode) {
 		
 		if (!this.#process)
 			return;
 		
+		const subprocess = this.#process;
+		subprocess.off("exit", this.#handleWatchdogExit);
+		
+		const signal = (typeof signalOrCode === "string" && signalOrCode.startsWith("SIG")) ?
+			signalOrCode :
+			"SIGTERM";
+		
+		return new Promise(resolve => {
+			
+			if (subprocess.exitCode !== null || subprocess.signalCode !== null) {
+				this.#process = null;
+				
+				resolve();
+			} else {
+				let forceKillTimer;
+				
+				const cleanup = () => {
+					
+					clearTimeout(forceKillTimer);
+					
+					this.#process = null;
+					
+					resolve();
+					
+				};
+				
+				subprocess.once("exit", cleanup);
+				subprocess.once("error", cleanup);
+				
+				this.#killProcess(subprocess, signal);
+				
+				forceKillTimer = setTimeout(() => {
+					
+					this.#killProcess(subprocess, "SIGKILL");
+					
+					setTimeout(cleanup, this.killTimeout);
+					
+				}, this.stopTimeout);
+			}
+			
+		});
+	}
+	
+	#killProcess(subprocess, signal) {
+		
 		try {
-			if (this.isDetached)
-				process.kill(-this.#process.pid, "SIGTERM");
+			if (process.platform === "win32")
+				if (signal === "SIGKILL")
+					execSync(`taskkill /pid ${subprocess.pid} /T /F`, { stdio: "ignore" });
+				else
+					subprocess.kill(signal);
 			else
-				this.#process.kill("SIGTERM");
+				if (this.isDetached)
+					try {
+						process.kill(-subprocess.pid, signal);
+					} catch {}
+				else
+					subprocess.kill(signal);
 		} catch {}
 		
 	}
@@ -100,35 +153,7 @@ export class ChildProcess extends Stage {
 		if (this.#process) {
 			this.#isRestarting = true;
 			
-			const subprocess = this.#process;
-			let isExited = false;
-			
-			await new Promise(resolve => {
-				const timeout = setTimeout(() => {
-					if (!isExited) {
-						try {
-							if (this.isDetached)
-								process.kill(-subprocess.pid, "SIGKILL");
-							else
-								subprocess.kill("SIGKILL");
-						} catch {}
-						
-						setTimeout(resolve, this.killTimeout);
-					}
-				}, this.stopTimeout);
-				
-				subprocess.once("exit", () => {
-					isExited = true;
-					clearTimeout(timeout);
-					resolve();
-				});
-				
-				this.stop();
-				
-			});
-			
-			if (this.#process === subprocess)
-				this.#process = null;
+			await this.stop();
 			
 			this.#isRestarting = false;
 		}
@@ -141,6 +166,7 @@ export class ChildProcess extends Stage {
 		
 		try {
 			const [ kind, ...rest ] = message;
+			
 			this.#messageHandlers[kind].apply(this, rest);
 		} catch {}
 		
@@ -152,6 +178,7 @@ export class ChildProcess extends Stage {
 			if (args) {
 				for (const arg of args) {
 					const keyRegExp = new RegExp(`^${arg.replace(/=.*$/, "")}(=|$)`);
+					
 					const index = this.args.findIndex(thisArg => keyRegExp.test(thisArg));
 					
 					if (~index)
@@ -160,17 +187,14 @@ export class ChildProcess extends Stage {
 						this.args.unshift(arg);
 				}
 				
-				if (args.length && path.parse(args.at(-1)).root)
-					if (this.args.length && path.parse(this.args.at(-1)).root)
+				if (args.length && parse(args.at(-1)).root)
+					if (this.args.length && parse(this.args.at(-1)).root)
 						this.args[this.args.length - 1] = args.at(-1);
 					else
 						this.args.push(args.at(-1));
 			}
 			
-			this.stop();
-			
-			if (!this.watchdog)
-				this.start();
+			this.do();
 			
 		}
 		
@@ -179,11 +203,11 @@ export class ChildProcess extends Stage {
 	#handleExit = () => {
 		
 		if (this.#isRestarting)
-			this.#isRestarting = false;
-		else {
-			this.#process = null;
-			console.info(`🚪${this.symbol} ${this.title} exited`);
-		}
+			return;
+		
+		this.#process = null;
+		
+		console.info(`🚪${this.symbol} ${this.title} exited`);
 		
 	};
 	
