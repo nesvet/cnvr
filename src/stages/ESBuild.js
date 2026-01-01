@@ -2,7 +2,7 @@ import path from "node:path";
 import * as esbuild from "esbuild";
 import { jscc } from "esbuild-plugin-jscc";
 import { unique } from "@nesvet/n";
-import { Packages } from "#utils";
+import { Packages, rawImportPlugin } from "#utils";
 import { Stage } from "./Stage.js";
 
 
@@ -27,10 +27,7 @@ export class ESBuild extends Stage {
 			symbol: "🔨",
 			title: "esbuild",
 			mainFields: [ "module", "main" ],
-			loader: {
-				".node": "file",
-				".css": "text"
-			},
+			loader: { ".node": "file" },
 			...NODE_ENV === "production" && {
 				legalComments: "none",
 				minify: true,
@@ -93,6 +90,7 @@ export class ESBuild extends Stage {
 			alias: this.alias,
 			define: this.define,
 			plugins: [
+				rawImportPlugin(),
 				this.jsccValues && jscc({
 					values: this.jsccValues,
 					ignore: this.jsccIgnore,

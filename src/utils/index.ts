@@ -8,5 +8,6 @@ export * from "./oraOptions";
 export * from "./packageJSON";
 export * from "./Packages";
 export * from "./pathExists";
+export * from "./rawImportPlugin";
 export * from "./require";
 export * from "./reveal";
