@@ -262,10 +262,10 @@ function loadOne(candidates: string[]) {
 		const parsed = parse(content);
 		
 		const params: Params =
-				paramsMap[basename(filePath)] = {
-					dir: dirname(filePath),
-					vars: Object.keys(parsed)
-				};
+			paramsMap[basename(filePath)] = {
+				dir: dirname(filePath),
+				vars: Object.keys(parsed)
+			};
 		
 		for (const [ key, value ] of Object.entries(parsed)) {
 			process.env[key] = value;
