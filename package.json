@@ -1,6 +1,6 @@
 {
 	"name": "cnvr",
-	"version": "2.8.6",
+	"version": "2.8.7",
 	"description": "Project build/dev pipeline",
 	"type": "module",
 	"module": "./dist/index.js",
