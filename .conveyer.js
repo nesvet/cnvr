@@ -1,6 +1,5 @@
 import { resolve } from "node:path";
-import { Conveyer } from "./src/stages/Conveyer";
-import { ESBuild } from "./src/stages/ESBuild";
+import { Conveyer, ESBuild } from "./src/stages";
 
 
 const DIST_DIR = "dist";
